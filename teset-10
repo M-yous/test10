@@ -1,0 +1,47 @@
+def configure_device(session):
+    try:
+        # Enter global configuration mode
+        session.sendline('configure terminal')
+        result = session.expect([r'.\(config\)#', pexpect.TIMEOUT, pexpect.EOF])
+        if result != 0:
+            raise Exception('Failed entering config mode')
+
+        # Set hostname
+        session.sendline('hostname R1')
+        result = session.expect([r'R1\(config\)#', pexpect.TIMEOUT, pexpect.EOF])
+        if result != 0:
+            raise Exception('Failed setting hostname')
+
+        # Configure loopback interface
+        session.sendline('interface loopback0')
+        result = session.expect([r'R1\(config-if\)#', pexpect.TIMEOUT, pexpect.EOF])
+        if result != 0:
+            raise Exception('Failed entering loopback interface mode')
+
+        session.sendline('ip address 1.1.1.1 255.255.255.255')  # Adjust IP address as needed
+        session.sendline('exit')
+
+        # Configure another interface (e.g., GigabitEthernet0/0)
+        session.sendline('interface GigabitEthernet0/0')
+        result = session.expect([r'R1\(config-if\)#', pexpect.TIMEOUT, pexpect.EOF])
+        if result != 0:
+            raise Exception('Failed entering GigabitEthernet0/0 interface mode')
+
+        session.sendline('ip address 192.168.1.1 255.255.255.0')  # Adjust IP address as needed
+        session.sendline('exit')
+
+        # Configure OSPF (you can replace this with EIGRP or RIP if needed)
+        session.sendline('router ospf 1')
+        result = session.expect([r'R1\(config-router\)#', pexpect.TIMEOUT, pexpect.EOF])
+        if result != 0:
+            raise Exception('Failed entering OSPF router mode')
+
+        session.sendline('network 1.1.1.1 0.0.0.0 area 0')  # Adjust network and area as needed
+        session.sendline('network 192.168.1.1 0.0.0.0 area 0')  # Adjust network and area as needed
+        session.sendline('exit')
+
+        session.sendline('exit')  # Exit global configuration mode
+
+    except Exception as e:
+        logger.error(e)
+        exit()
